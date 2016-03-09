@@ -1,0 +1,14 @@
+{
+  "name": "google-play-scraper",
+  "version": "1.0.0",
+  "description": "a idea based on https://github.com/facundoolano/google-play-scraper",
+  "scripts": {},
+  "keywords": [],
+  "author": "Vincent Yang",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "express": "^4.13.4",
+    "google-play-scraper": "^0.3.0"
+  }
+}
