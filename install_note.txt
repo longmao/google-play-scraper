@@ -1,0 +1,14 @@
+
+    1. sudo apt-get update
+    2. sudo apt-get install nodejs
+    3. sudo apt-get install npm
+    4. sudo ln -s "$(which nodejs)" /usr/bin/node
+    5. sudo apt-get install git
+    6. mkdir /dianyi/app/node
+    7. cd /dianyi/app/node
+    8. git clone https://github.com/longmao/google_play_nodejs.git
+    9. cd google_play_nodejs
+    10. npm install
+    11. npm install -g forever
+    12. forever start app.js
+

@@ -9,6 +9,7 @@
   "dependencies": {},
   "devDependencies": {
     "express": "^4.13.4",
+    "forever": "^0.15.1",
     "google-play-scraper": "^0.3.0"
   }
 }
