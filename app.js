@@ -5,7 +5,7 @@ var app = express()
 app.get('/getAppInfo', function(req, res) {
     if (!req.query || !req.query.id) return res.send({ msg: "app id can not empty" })
 
-    gplay.app({ appId: req.query.id || 'com.dxco.pandavszombies' })
+    gplay.app({ appId: req.query.id || 'com.dxco.pandavszombies', lang: req.query.lang || "en", country: req.query.country || "us"})
         .then(function(app) {
             res.send(app);
 
@@ -17,6 +17,6 @@ app.get('/getAppInfo', function(req, res) {
 })
 
 app.use(function(req, res, next) {
-    res.status(404).send("Sorry, page not found" );
+    res.status(404).send("Sorry, page not found");
 });
 app.listen(8888)
