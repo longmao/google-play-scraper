@@ -11,9 +11,8 @@ app.get('/getAppInfo', function(req, res) {
 
     gplay.app({ appId: req.query.id || 'com.dxco.pandavszombies', lang: req.query.lang || "en", country: req.query.country || "us" })
         .then(function(app) {
+            console.log('worker'+cluster.worker.id);
             res.send(app);
-            console.log(333)
-            console.log('Retrieved application: ' + app);
         })
         .catch(function(e) {
             console.log('There was an error fetching the application!');
@@ -37,8 +36,5 @@ if (cluster.isMaster) {
 
 } else if (cluster.isWorker) {
     console.log('[worker] ' + "start worker ..." + cluster.worker.id);
-    http.createServer(function(req, res) {
-        console.log('worker' + cluster.worker.id);
-        res.end('worker' + cluster.worker.id + ',PID:' + process.pid);
-    }).listen(8888);
+    app.listen(8888);
 }
