@@ -8,8 +8,11 @@
   "license": "MIT",
   "dependencies": {},
   "devDependencies": {
+    "compression": "^1.6.1",
     "express": "^4.13.4",
     "forever": "^0.15.1",
-    "google-play-scraper": "^0.3.0"
+    "google-play-scraper": "^0.3.0",
+    "morgan": "^1.7.0",
+    "winston": "^2.2.0"
   }
 }

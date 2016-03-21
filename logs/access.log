@@ -1,0 +1,2 @@
+{"level":"error","message":"url:/getAppInfo?id=com.dxco.pandavszombies22222, satusCode:304,the app id is not valid","timestamp":"2016-03-21T10:09:47.368Z"}
+{"level":"info","message":"::1 - - [21/Mar/2016:10:09:47 +0000] \"GET /getAppInfo?id=com.dxco.pandavszombies22222 HTTP/1.1\" 304 - \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.71 Safari/537.36\"\n","timestamp":"2016-03-21T10:09:47.371Z"}
