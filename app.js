@@ -7,6 +7,14 @@ var logger = require("./logger");
 var app = express()
 var numCPUs = require('os').cpus().length;
 
+var path = require('path')
+var childProcess = require('child_process')
+var phantomjs = require('phantomjs-prebuilt')
+var binPath = phantomjs.path
+
+
+var request = require('request');
+
 
 app.use(require("morgan")("combined", { "stream": logger.stream }));
 app.get('/getAppInfo', function(req, res) {
@@ -25,6 +33,30 @@ app.get('/getAppInfo', function(req, res) {
             logger.error("url:" + req.url + ", satusCode:" + res.statusCode + ",the app id is not valid")
         });
 })
+
+
+app.get('/getFinalSpiderHtml', function(req, res) {
+    var url = req.query.url || "http://global.ymtracking.com/trace?offer_id=116686&aff_id=1&aff_sub=unlock%40%4056f33980e4b0f048710723e4&android_id=375dec1f7a6c588e";
+    var childArgs = [
+        path.join(__dirname, 'phantomjs-script.js'),
+        url
+    ]
+
+    childProcess.execFile(binPath, childArgs, function(err, stdout, stderr) {
+
+        request(stdout, function(error, response, body) {
+            if (!error && response.statusCode == 200) {
+                console.log(body) // Show the HTML for the Google homepage. 
+            }
+        })
+    })
+
+
+
+
+})
+
+
 
 
 app.use(function(req, res, next) {
