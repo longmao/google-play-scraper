@@ -43,9 +43,6 @@ app.get('/getFinalSpiderHtml', function(req, res) {
     ]
     childProcess.execFile(binPath, childArgs, function(err, stdout, stderr) {
         request(stdout, function(error, response, body) {
-            if (!error && response.statusCode == 200) {
-                console.log(response.headers) // Show the HTML for the Google homepage. 
-            }
             response.headers['statusCode'] = response.statusCode
             res.send({
                 html:body,
