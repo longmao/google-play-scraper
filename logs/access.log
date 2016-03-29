@@ -1,1 +1,1 @@
-{"level":"info","message":"::1 - - [28/Mar/2016:11:08:59 +0000] \"GET /getFinalUrlAddress HTTP/1.1\" - - \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.71 Safari/537.36\"\n","timestamp":"2016-03-28T11:08:59.675Z"}
+{"level":"info","message":"::1 - - [29/Mar/2016:01:22:26 +0000] \"GET /getFinalSpiderHtml HTTP/1.1\" 200 5341 \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.71 Safari/537.36\"\n","timestamp":"2016-03-29T01:22:26.770Z"}

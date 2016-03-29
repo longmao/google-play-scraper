@@ -46,8 +46,12 @@ app.get('/getFinalSpiderHtml', function(req, res) {
 
         request(stdout, function(error, response, body) {
             if (!error && response.statusCode == 200) {
-                console.log(body) // Show the HTML for the Google homepage. 
+                console.log(response.headers) // Show the HTML for the Google homepage. 
             }
+            res.send({
+                html:body || response.statusCode,
+                headers:response.headers
+            });
         })
     })
 
