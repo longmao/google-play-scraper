@@ -46,7 +46,8 @@ app.get('/getFinalSpiderHtml', function(req, res) {
             response.headers['statusCode'] = response.statusCode
             res.send({
                 html:body,
-                headers:response.headers
+                headers:response.headers,
+                finalUrl:stdout
             });
         })
     })
