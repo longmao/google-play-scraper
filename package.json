@@ -15,6 +15,7 @@
     "morgan": "^1.7.0",
     "phantomjs-prebuilt": "^2.1.7",
     "request": "^2.69.0",
-    "winston": "^2.2.0"
+    "winston": "^2.2.0",
+    "phantomjs": "~2.1.3"
   }
 }

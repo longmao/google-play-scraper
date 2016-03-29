@@ -29,7 +29,6 @@ function checkRedirects(myurl) {
     });
 }
 
-
 // run it!
 checkRedirects(url)
 setTimeout(function(){
