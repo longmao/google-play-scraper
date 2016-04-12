@@ -41,15 +41,16 @@ app.get('/getAppInfo', function(req, res) {
 app.get('/getAppInfoFromFile', function() {
     util.writeData(util.cache_json_url, "", "", function() {
         util.getData(util.google_play_apps, function(data) {
-            var arr = data.split("\r\n")
+            var arr = data.split("https://play.google.com/store/apps/details?id=")
+
             var arr_app_id = []
             arr.forEach(function(i) {
-                var id = i.replace("https://play.google.com/store/apps/details?id=", "");
-                arr_app_id.push(id);
+
+                var id = i.replace("\n", "");
+                id && arr_app_id.push(id);
             })
 
-            var arr_app_id_length = 50 || arr_app_id.length
-
+            var arr_app_id_length = arr_app_id.length
             for (var i = 0; i < arr_app_id_length; i++) {
                 var url = "http://localhost:8888/getAppInfo?id=" + arr_app_id[i] + "&lang=en&country=us";
 
