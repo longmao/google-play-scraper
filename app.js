@@ -47,10 +47,10 @@ app.get('/getAppInfoFromFile', function() {
             arr.forEach(function(i) {
 
                 var id = i.replace("\n", "");
+                id= id.replace("\r","")
                 id && arr_app_id.push(id);
             })
-
-            var arr_app_id_length = arr_app_id.length
+            var arr_app_id_length =  arr_app_id.length
             for (var i = 0; i < arr_app_id_length; i++) {
                 var url = "http://localhost:8888/getAppInfo?id=" + arr_app_id[i] + "&lang=en&country=us";
 
