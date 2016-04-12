@@ -50,11 +50,13 @@ app.get('/getAppInfoFromFile', function() {
                 id= id.replace("\r","")
                 id && arr_app_id.push(id);
             })
-            var arr_app_id_length =  arr_app_id.length
-            for (var i = 0; i < arr_app_id_length; i++) {
-                var url = "http://localhost:8888/getAppInfo?id=" + arr_app_id[i] + "&lang=en&country=us";
 
-                util.saveToJSONFile(arr_app_id[i], url, arr_app_id_length)
+            var arr_app_id_length = arr_app_id.length
+            if(util.isFinishFetchData) return
+            for (var j = 0; j < arr_app_id_length; j++) {
+                var url = "http://localhost:8888/getAppInfo?id=" + arr_app_id[j] + "&lang=en&country=us";
+
+                util.saveToJSONFile(arr_app_id[j], url, arr_app_id_length)
             }
         })
 

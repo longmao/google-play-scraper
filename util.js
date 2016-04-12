@@ -3,8 +3,9 @@ var util = function(CONFIG) {
     var _index = 0;
     var request = require('request');
     var that = this
-    this.cache_json_url = "google_play_apps.json"
-    this.google_play_apps = "google_play_apps.txt"
+    this.cache_json_url = "google_play_apps.json";
+    this.google_play_apps = "google_play_apps.txt";
+    this.isFetchingData = false
     this.getData = function(srcPath, callback) {
         fs.readFile(srcPath, 'utf8', function(err, data) {
             if (err) throw err;
@@ -32,6 +33,7 @@ var util = function(CONFIG) {
     this.resetCurrentIndex = function() {
         _index = 0
     }
+
     this.saveToJSONFile = function(app_id, url, app_num) {
         return (function(app_id, url, app_num) {
             console.log(url)
@@ -41,6 +43,9 @@ var util = function(CONFIG) {
                 newObj[app_id] = body_obj
                 var currentIndex = that.getCurrentIndex();
                 var appendStr = ""
+                that.isFetchingData = true
+                console.log("save id : " + app_id)
+                console.log("save index : " + currentIndex)
                 if (currentIndex === 1) {
                     appendStr = "[" + JSON.stringify(newObj) + ","
 
@@ -48,6 +53,7 @@ var util = function(CONFIG) {
                     appendStr = JSON.stringify(newObj) + "]"
                     that.resetCurrentIndex()
                     console.log("congratuation!!! All Done!")
+                    that.isFetchingData = false
 
                 } else {
                     appendStr = JSON.stringify(newObj) + ","
