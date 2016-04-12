@@ -3,7 +3,7 @@ var express = require('express')
 var cluster = require('cluster');
 var http = require('http');
 var logger = require("./logger");
-
+var util = require("./util.js")();
 var app = express()
 var numCPUs = require('os').cpus().length;
 
@@ -14,6 +14,10 @@ var binPath = phantomjs.path
 
 
 var request = require('request');
+
+require('events').EventEmitter.defaultMaxListeners = Infinity;
+
+var http = require('http');
 
 
 app.use(require("morgan")("combined", { "stream": logger.stream }));
@@ -34,7 +38,30 @@ app.get('/getAppInfo', function(req, res) {
         });
 })
 
+app.get('/getAppInfoFromFile', function() {
+    util.writeData(util.cache_json_url, "", "", function() {
+        util.getData(util.google_play_apps, function(data) {
+            var arr = data.split("\r\n")
+            var arr_app_id = []
+            arr.forEach(function(i) {
+                var id = i.replace("https://play.google.com/store/apps/details?id=", "");
+                arr_app_id.push(id);
+            })
 
+            var arr_app_id_length = 50 || arr_app_id.length
+
+            for (var i = 0; i < arr_app_id_length; i++) {
+                var url = "http://localhost:8888/getAppInfo?id=" + arr_app_id[i] + "&lang=en&country=us";
+
+                util.saveToJSONFile(arr_app_id[i], url, arr_app_id_length)
+            }
+        })
+
+    })
+
+
+
+})
 app.get('/getFinalSpiderHtml', function(req, res) {
     var url = req.query.url || "http://global.ymtracking.com/trace?offer_id=116686&aff_id=1&aff_sub=unlock%40%4056f33980e4b0f048710723e4&android_id=375dec1f7a6c588e";
     var childArgs = [
@@ -45,9 +72,9 @@ app.get('/getFinalSpiderHtml', function(req, res) {
         request(stdout, function(error, response, body) {
             response.headers['statusCode'] = response.statusCode
             res.send({
-                html:body,
-                headers:response.headers,
-                finalUrl:stdout
+                html: body,
+                headers: response.headers,
+                finalUrl: stdout
             });
         })
     })
