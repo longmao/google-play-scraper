@@ -6,6 +6,7 @@ var logger = require("./logger");
 var util = require("./util.js")();
 var app = express()
 var numCPUs = require('os').cpus().length;
+var _ = require("./lodash.js")
 
 var path = require('path')
 var childProcess = require('child_process')
@@ -41,7 +42,7 @@ app.get('/getAppInfo', function(req, res) {
 app.get('/getAppInfoFromFile', function() {
     util.writeData(util.cache_json_url, "", "", function() {
         util.getData(util.google_play_apps, function(data) {
-            var arr = data.split("https://play.google.com/store/apps/details?id=")
+            var arr = data.split("\n")
 
             var arr_app_id = []
             arr.forEach(function(i) {
@@ -50,7 +51,9 @@ app.get('/getAppInfoFromFile', function() {
                 id= id.replace("\r","")
                 id && arr_app_id.push(id);
             })
-
+            console.log(arr_app_id.length)
+            arr_app_id = _.uniq(arr_app_id)
+            console.log(arr_app_id.length)
             var arr_app_id_length = arr_app_id.length
             if(util.isFinishFetchData) return
             for (var j = 0; j < arr_app_id_length; j++) {
