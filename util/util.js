@@ -3,9 +3,13 @@ var util = function(CONFIG) {
     var _index = 0;
     var request = require('request');
     var that = this
-    this.cache_json_url = "../file/google_play_apps.json";
-    this.google_play_apps = "../file/google_play_apps.txt";
     this.isFetchingData = false
+    this.get_cache_json_url = function(path) {
+        return path + "file/google_play_apps.json";
+    }
+    this.get_google_play_apps = function(path) {
+        return path + "file/google_play_apps.txt";
+    }
     this.getData = function(srcPath, callback) {
         fs.readFile(srcPath, 'utf8', function(err, data) {
             if (err) throw err;
@@ -15,14 +19,12 @@ var util = function(CONFIG) {
     this.writeData = function(savPath, saveData, logInfo, callback) {
         fs.writeFile(savPath, saveData, function(err) {
             if (err) throw err;
-            console.log(logInfo);
             callback && callback()
         });
     }
     this.appendData = function(savPath, saveData, logInfo, callback) {
         fs.appendFile(savPath, saveData, function(err) {
             if (err) throw err;
-            console.log(logInfo);
             callback && callback()
         });
     }
@@ -44,8 +46,8 @@ var util = function(CONFIG) {
                 var currentIndex = that.getCurrentIndex();
                 var appendStr = ""
                 that.isFetchingData = true
-                console.log("save id : " + app_id)
                 console.log("save index : " + currentIndex)
+                console.log("save id : " + app_id)
                 if (currentIndex === 1) {
                     appendStr = "[" + JSON.stringify(newObj) + ","
 
@@ -58,7 +60,7 @@ var util = function(CONFIG) {
                 } else {
                     appendStr = JSON.stringify(newObj) + ","
                 }
-                that.appendData(that.cache_json_url, appendStr, "finish save to cache : " + that.cache_json_url, function() {})
+                that.appendData(that.get_cache_json_url("./"), appendStr, "finish save to cache : " + that.get_cache_json_url("./"), function() {})
             })
         })(app_id, url, app_num)
     }
