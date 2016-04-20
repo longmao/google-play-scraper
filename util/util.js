@@ -3,8 +3,8 @@ var util = function(CONFIG) {
     var _index = 0;
     var request = require('request');
     var that = this
-    this.cache_json_url = "google_play_apps.json";
-    this.google_play_apps = "google_play_apps.txt";
+    this.cache_json_url = "../file/google_play_apps.json";
+    this.google_play_apps = "../file/google_play_apps.txt";
     this.isFetchingData = false
     this.getData = function(srcPath, callback) {
         fs.readFile(srcPath, 'utf8', function(err, data) {

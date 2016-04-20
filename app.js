@@ -3,10 +3,10 @@ var express = require('express')
 var cluster = require('cluster');
 var http = require('http');
 var logger = require("./logger");
-var util = require("./util.js")();
+var util = require("./util/util.js")();
 var app = express()
 var numCPUs = require('os').cpus().length;
-var _ = require("./lodash.js")
+var _ = require("./util/lodash.js")
 
 var path = require('path')
 var childProcess = require('child_process')
