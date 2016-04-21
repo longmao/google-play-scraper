@@ -19,9 +19,37 @@ var request = require('request');
 require('events').EventEmitter.defaultMaxListeners = Infinity;
 
 var http = require('http');
+var websocket_server = require('websocket').server
+
 
 
 app.use(require("morgan")("combined", { "stream": logger.stream }));
+
+
+if (cluster.isMaster) {
+    console.log('[master] ' + "start master...");
+
+    for (var i = 0; i < numCPUs; i++) {
+        cluster.fork();
+    }
+
+    cluster.on('listening', function(worker, address) {
+        console.log('[master] ' + 'listening: worker' + worker.id + ',pid:' + worker.process.pid + ', Address:' + address.address + ":" + address.port);
+    });
+
+} else if (cluster.isWorker) {
+    console.log('[worker] ' + "start worker ..." + cluster.worker.id);
+    app.listen(8888);
+}
+
+
+var socket = new websocket_server({
+    httpServer: http.createServer().listen(1337)
+});
+
+
+
+
 app.get('/getAppInfo', function(req, res) {
     if (!req.query || !req.query.id) return res.send({ msg: "app id can not empty" })
 
@@ -38,32 +66,61 @@ app.get('/getAppInfo', function(req, res) {
             logger.error("url:" + req.url + ", satusCode:" + res.statusCode + ",the app id is not valid")
         });
 })
+var connection;
+socket.on('request', function(request) {
 
-app.get('/getAppInfoFromFile', function() {
-    util.writeData(util.get_cache_json_url("./"), "", "", function() {
-        util.getData(util.get_google_play_apps("./"), function(data) {
-            var arr = data.split("\n")
+    connection = request.accept(null, request.origin);
 
-            var arr_app_id = []
-            arr.forEach(function(i) {
+    connection.on('message', function(message) {
+        console.log(message)
+        if (message.utf8Data === "startCrawl") {
+            if(util.isFetchingData) return
+            util.isFetchingData = true
+            util.writeData(util.get_cache_json_url("./"), "", "", function() {
+                util.getData(util.get_google_play_apps("./"), function(data) {
+                    var arr = data.split("\n")
 
-                var id = i.replace("\n", "");
-                id= id.replace("\r","")
-                id && arr_app_id.push(id);
+                    var arr_app_id = []
+                    arr.forEach(function(i) {
+
+                        var id = i.replace("\n", "");
+                        id = id.replace("\r", "")
+                        id && arr_app_id.push(id);
+                    })
+                    console.log(arr_app_id.length)
+                    arr_app_id = _.uniq(arr_app_id)
+                    console.log(arr_app_id.length)
+                    var arr_app_id_length = 3 || arr_app_id.length
+                    if (util.isFinishFetchData) return
+                    for (var j = 0; j < arr_app_id_length; j++) {
+                        var url = "http://localhost:8888/getAppInfo?id=" + arr_app_id[j] + "&lang=en&country=us";
+                        util.saveToJSONFile(arr_app_id[j], url, arr_app_id_length, function(data) {
+                            connection.sendUTF(data);
+                        })
+                    }
+                })
+
             })
-            console.log(arr_app_id.length)
-            arr_app_id = _.uniq(arr_app_id)
-            console.log(arr_app_id.length)
-            var arr_app_id_length = 3 || arr_app_id.length
-            if(util.isFinishFetchData) return
-            for (var j = 0; j < arr_app_id_length; j++) {
-                var url = "http://localhost:8888/getAppInfo?id=" + arr_app_id[j] + "&lang=en&country=us";
+        }
 
-                util.saveToJSONFile(arr_app_id[j], url, arr_app_id_length)
-            }
-        })
+
+    });
+
+    connection.on('close', function(connection) {
+        console.log("close")
+        console.log('connection closed');
+    });
+});
+
+
+
+app.get('/getAppInfoFromFile', function(req, res) {
+
+    res.sendFile('index.html', { root: __dirname }, function() {
 
     })
+
+
 
 
 
@@ -90,25 +147,11 @@ app.get('/getFinalSpiderHtml', function(req, res) {
 
 })
 
-
+app.get('/', function(req, res) {
+    res.sendFile('index.html', { root: __dirname })
+});
 
 
 app.use(function(req, res, next) {
     res.status(404).send("Sorry, page not found");
 });
-
-if (cluster.isMaster) {
-    console.log('[master] ' + "start master...");
-
-    for (var i = 0; i < numCPUs; i++) {
-        cluster.fork();
-    }
-
-    cluster.on('listening', function(worker, address) {
-        console.log('[master] ' + 'listening: worker' + worker.id + ',pid:' + worker.process.pid + ', Address:' + address.address + ":" + address.port);
-    });
-
-} else if (cluster.isWorker) {
-    console.log('[worker] ' + "start worker ..." + cluster.worker.id);
-    app.listen(8888);
-}

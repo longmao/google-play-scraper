@@ -38,7 +38,7 @@ var util = function(CONFIG) {
         _index = 0
     }
 
-    this.saveToJSONFile = function(app_id, url, app_num) {
+    this.saveToJSONFile = function(app_id, url, app_num, callback) {
         return (function(app_id, url, app_num) {
             console.log(url)
             request(url, function(error, response, body) {
@@ -47,7 +47,6 @@ var util = function(CONFIG) {
                 newObj[app_id] = body_obj
                 var currentIndex = that.getCurrentIndex();
                 var appendStr = ""
-                that.isFetchingData = true
                 console.log("save index : " + currentIndex)
                 console.log("save id : " + app_id)
                 if (currentIndex === 1) {
@@ -63,9 +62,12 @@ var util = function(CONFIG) {
                     appendStr = JSON.stringify(newObj) + ","
                 }
                 that.appendData(that.get_cache_json_url("./"), appendStr, "finish save to cache : " + that.get_cache_json_url("./"), function() {
-                    if (currentIndex === app_num) {
+                    var message = currentIndex === app_num ? "finished" : "Index: " + currentIndex + ", Url: " + url
+
+                    callback && callback(message)
+                    if (currentIndex == app_num) {
                         exec("cp  file/google_play_apps.json upload/", function() {
-                            exec('svn commit -m "update json file" --username=vincent.yang --password=DCsAp666', {cwd:"upload/"} ,function() {
+                            exec('svn commit -m "update json file" --username=vincent.yang --password=DCsAp666', { cwd: "upload/" }, function() {
                                 console.log("awesome news!!the google_play_apps.json have been updated, please contact the dever to svn up")
                             })
                         })

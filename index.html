@@ -1,0 +1,62 @@
+<style type="text/css" media="screen">
+body {
+    background-color: rgb(241, 242, 246);
+}
+
+div.main {
+    padding: 20px;
+    margin-bottom: 20px;
+    background-color: #fff;
+    border-radius: 4px;
+    -webkit-box-shadow: 0 1px 2px rgba(0, 0, 0, .2);
+    -moz-box-shadow: 0 1px 2px rgba(0, 0, 0, .2);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .2);
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    width: 960px;
+    margin: 0 auto;
+}
+
+p {
+    font-size: 14px;
+    color: #4A4949;
+    padding: 0;
+    margin: 0;
+    line-height: 26px;
+}
+
+p.highlight {
+    font-size: 16px;
+}
+</style>
+<div class="main">
+    <h2> Crawl Google Play Info:</h2>
+    <div id="content">
+    </div>
+</div>
+<script type="text/javascript" src="http://cdn.staticfile.org/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript">
+var content = document.getElementById('content');
+var socket = new WebSocket('ws://localhost:1337');
+socket.onopen = function() {
+    socket.send('startCrawl');
+};
+
+socket.onmessage = function(message) {
+    var $append
+    if (message.data !== "finished") {
+        $append = $('<p class="">' + message.data + '</p>')
+        $append.animate({
+            opacity: 0,
+        }, 2000, function() {});
+    } else {
+        $append = $('<p class="highlight">awesome news!!the google_play_apps.json have been updated, please <strong>svn up svn://svn.dy/arch/fe/file</strong></p>')
+    }
+
+    $("#content").prepend($append)
+};
+
+socket.onerror = function(error) {
+    console.log('WebSocket error: ' + error);
+};
+</script>
