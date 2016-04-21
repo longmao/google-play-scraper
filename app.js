@@ -54,7 +54,7 @@ app.get('/getAppInfoFromFile', function() {
             console.log(arr_app_id.length)
             arr_app_id = _.uniq(arr_app_id)
             console.log(arr_app_id.length)
-            var arr_app_id_length = 5 || arr_app_id.length
+            var arr_app_id_length = 3 || arr_app_id.length
             if(util.isFinishFetchData) return
             for (var j = 0; j < arr_app_id_length; j++) {
                 var url = "http://localhost:8888/getAppInfo?id=" + arr_app_id[j] + "&lang=en&country=us";

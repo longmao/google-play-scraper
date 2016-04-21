@@ -3,6 +3,8 @@ var util = function(CONFIG) {
     var _index = 0;
     var request = require('request');
     var that = this
+    var exec = require('child_process').exec;
+
     this.isFetchingData = false
     this.get_cache_json_url = function(path) {
         return path + "file/google_play_apps.json";
@@ -60,7 +62,17 @@ var util = function(CONFIG) {
                 } else {
                     appendStr = JSON.stringify(newObj) + ","
                 }
-                that.appendData(that.get_cache_json_url("./"), appendStr, "finish save to cache : " + that.get_cache_json_url("./"), function() {})
+                that.appendData(that.get_cache_json_url("./"), appendStr, "finish save to cache : " + that.get_cache_json_url("./"), function() {
+                    if (currentIndex === app_num) {
+                        exec("cp  file/google_play_apps.json upload/", function() {
+                            exec('svn commit -m "update json file" --username=vincent.yang --password=DCsAp666', {cwd:"upload/"} ,function() {
+                                console.log("awesome news!!the google_play_apps.json have been updated, please contact the dever to svn up")
+                            })
+                        })
+                    }
+                })
+
+
             })
         })(app_id, url, app_num)
     }
