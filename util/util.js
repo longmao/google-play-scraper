@@ -62,7 +62,7 @@ var util = function(CONFIG) {
                     appendStr = JSON.stringify(newObj) + ","
                 }
                 that.appendData(that.get_cache_json_url("./"), appendStr, "finish save to cache : " + that.get_cache_json_url("./"), function() {
-                    var message = currentIndex === app_num ? "finished" : "Index: " + currentIndex + ", Url: " + url
+                    var message = currentIndex === app_num ? "finished" : "Index: " + currentIndex + ", Url: " + url + "---" + currentIndex + "---" + app_num;
 
                     callback && callback(message)
                     if (currentIndex == app_num) {
