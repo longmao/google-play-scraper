@@ -2,18 +2,16 @@ var system = require('system');
 var content = ""
 var url = "http://global.ymtracking.com/trace?offer_id=116686&aff_id=1&aff_sub=unlock%40%4056f33980e4b0f048710723e4&android_id=375dec1f7a6c588e"
 var final_url = "";
-
 function checkRedirects(myurl) {
     page = require('webpage').create();
-    console.log(" 22: " + myurl)
 
     // suppress errors from output
     page.onError = function(msg, trace) {}
 
     // pretend to be a different browser, helps with some shitty browser-detection scripts
-    page.settings.userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:22.0) Gecko/20100101 Firefox/22.0';
+    page.settings.userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.57 Safari/537.36';
     page.onResourceReceived = function(response) {
-      console.log(JSON.stringify(response.headers));
+      //console.log(JSON.stringify(response.headers));
     };
     page.onNavigationRequested = function(url, type, willNavigate, main) {
         //console.log(type)
@@ -45,4 +43,4 @@ checkRedirects(url)
 setTimeout(function() {
     console.log(final_url)
     phantom.exit();
-}, 15000);
+}, 8000);

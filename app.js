@@ -110,10 +110,12 @@ app.get('/getFinalSpiderHtml', function(req, res) {
         path.join(__dirname, 'phantomjs-script.js'),
         url
     ]
+    var headers = {
+        'User-Agent': util.getUA()
+    };
     childProcess.execFile(binPath, childArgs, function(err, stdout, stderr) {
-        console.log(stdout)
-        return;
-        request(stdout, function(error, response, body) {
+
+        request({ url: stdout, headers: headers }, function(error, response, body) {
             response.headers['statusCode'] = response.statusCode
             res.send({
                 html: body,

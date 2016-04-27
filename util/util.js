@@ -6,7 +6,10 @@ var util = function(CONFIG) {
     var exec = require('child_process').exec;
     var _ = require("./lodash.js")
 
-    this.isFetchingData = false
+    this.isFetchingData = false;
+    this.getUA = function() {
+        return 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.57 Safari/537.36'
+    }
     this.get_cache_json_url = function(path) {
         return path + "file/google_play_apps.json";
     }
