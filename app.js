@@ -90,7 +90,6 @@ socket.on('request', function(request) {
 
 app.get('/getAppInfoFromFile', function(req, res) {
     var ua = req.headers && req.headers['user-agent'] || "";
-    console.log(util.is_from_browser(ua))
     if (util.is_from_browser(ua)) {
         res.sendFile('index.html', { root: __dirname }, function() {
 

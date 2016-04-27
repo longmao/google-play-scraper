@@ -95,10 +95,8 @@ var util = function(CONFIG) {
                     id = id.replace("\r", "")
                     id && arr_app_id.push(id);
                 })
-                console.log(arr_app_id.length)
                 arr_app_id = _.uniq(arr_app_id)
-                console.log(arr_app_id.length)
-                var arr_app_id_length = 2 || arr_app_id.length
+                var arr_app_id_length = arr_app_id.length
                 for (var j = 0; j < arr_app_id_length; j++) {
                     var url = "http://localhost:8888/getAppInfo?id=" + arr_app_id[j] + "&lang=en&country=us";
                     util.saveToJSONFile(arr_app_id[j], url, arr_app_id_length, callback)
