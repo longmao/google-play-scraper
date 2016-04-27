@@ -4,6 +4,7 @@ var util = function(CONFIG) {
     var request = require('request');
     var that = this
     var exec = require('child_process').exec;
+    var _ = require("./lodash.js")
 
     this.isFetchingData = false
     this.get_cache_json_url = function(path) {
@@ -38,6 +39,74 @@ var util = function(CONFIG) {
         _index = 0
     }
 
+    this.is_from_browser = function(ua) {
+        var is_from_browser = false;
+
+        if (/mobile/i.test(ua))
+            is_from_browser = true;
+
+        if (/like Mac OS X/.test(ua)) {
+            is_from_browser = true;
+        }
+
+        if (/Android/.test(ua))
+            is_from_browser = true;
+
+        if (/webOS\//.test(ua))
+            is_from_browser = true;
+
+        if (/(Intel|PPC) Mac OS X/.test(ua))
+            is_from_browser = true;
+
+        if (/Windows NT/.test(ua))
+            is_from_browser = true;
+
+        if (/mobile/i.test(ua))
+            is_from_browser = true;
+
+        if (/like Mac OS X/.test(ua)) {
+            is_from_browser = true;
+        }
+
+        if (/Android/.test(ua))
+            is_from_browser = true;
+
+        if (/webOS\//.test(ua))
+            is_from_browser = true;
+
+        if (/(Intel|PPC) Mac OS X/.test(ua))
+            is_from_browser = true;
+
+        if (/Windows NT/.test(ua))
+            is_from_browser = true;
+        return is_from_browser
+    }
+    this.startCrawl = function(callback) {
+        var util = that
+        if(util.isFetchingData) return
+        util.isFetchingData = true
+        util.writeData(util.get_cache_json_url("./"), "", "", function() {
+            util.getData(util.get_google_play_apps("./"), function(data) {
+                var arr = data.split("\n")
+                var arr_app_id = []
+                arr.forEach(function(i) {
+
+                    var id = i.replace("\n", "");
+                    id = id.replace("\r", "")
+                    id && arr_app_id.push(id);
+                })
+                console.log(arr_app_id.length)
+                arr_app_id = _.uniq(arr_app_id)
+                console.log(arr_app_id.length)
+                var arr_app_id_length = 2 || arr_app_id.length
+                for (var j = 0; j < arr_app_id_length; j++) {
+                    var url = "http://localhost:8888/getAppInfo?id=" + arr_app_id[j] + "&lang=en&country=us";
+                    util.saveToJSONFile(arr_app_id[j], url, arr_app_id_length, callback)
+                }
+            })
+
+        })
+    }
     this.saveToJSONFile = function(app_id, url, app_num, callback) {
         return (function(app_id, url, app_num) {
             console.log(url)

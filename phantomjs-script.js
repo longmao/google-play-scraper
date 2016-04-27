@@ -5,16 +5,21 @@ var final_url = "";
 
 function checkRedirects(myurl) {
     page = require('webpage').create();
+    console.log(" 22: " + myurl)
 
     // suppress errors from output
     page.onError = function(msg, trace) {}
 
     // pretend to be a different browser, helps with some shitty browser-detection scripts
     page.settings.userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:22.0) Gecko/20100101 Firefox/22.0';
-
+    page.onResourceReceived = function(response) {
+      console.log(JSON.stringify(response.headers));
+    };
     page.onNavigationRequested = function(url, type, willNavigate, main) {
+        //console.log(type)
         if (
             main &&
+            url.match(/^http/ig) && 
             url != myurl &&
             url.replace(/\/$/, "") != myurl &&
             (type == "Other" || type == "Undefined") //  type = not by click/submit etc
@@ -24,7 +29,6 @@ function checkRedirects(myurl) {
             checkRedirects(url); // reload on new page
         }
     };
-
     page.open(myurl, function(status) {
         //console.log("newurl: " + myurl)
     });
@@ -36,9 +40,9 @@ if (system.args.length === 1) {
     url = system.args[1];
 }
 final_url = url
-// run it!
+    // run it!
 checkRedirects(url)
 setTimeout(function() {
     console.log(final_url)
     phantom.exit();
-}, 6000);
+}, 15000);

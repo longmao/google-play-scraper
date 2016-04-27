@@ -6,8 +6,6 @@ var logger = require("./logger");
 var util = require("./util/util.js")();
 var app = express()
 var numCPUs = require('os').cpus().length;
-var _ = require("./util/lodash.js")
-
 var path = require('path')
 var childProcess = require('child_process')
 var phantomjs = require('phantomjs')
@@ -74,32 +72,8 @@ socket.on('request', function(request) {
     connection.on('message', function(message) {
         console.log(message)
         if (message.utf8Data === "startCrawl") {
-            if(util.isFetchingData) return
-            util.isFetchingData = true
-            util.writeData(util.get_cache_json_url("./"), "", "", function() {
-                util.getData(util.get_google_play_apps("./"), function(data) {
-                    var arr = data.split("\n")
-
-                    var arr_app_id = []
-                    arr.forEach(function(i) {
-
-                        var id = i.replace("\n", "");
-                        id = id.replace("\r", "")
-                        id && arr_app_id.push(id);
-                    })
-                    console.log(arr_app_id.length)
-                    arr_app_id = _.uniq(arr_app_id)
-                    console.log(arr_app_id.length)
-                    var arr_app_id_length = arr_app_id.length
-                    if (util.isFinishFetchData) return
-                    for (var j = 0; j < arr_app_id_length; j++) {
-                        var url = "http://localhost:8888/getAppInfo?id=" + arr_app_id[j] + "&lang=en&country=us";
-                        util.saveToJSONFile(arr_app_id[j], url, arr_app_id_length, function(data) {
-                            connection.sendUTF(data);
-                        })
-                    }
-                })
-
+            util.startCrawl(function(data) {
+                connection.sendUTF(data);
             })
         }
 
@@ -115,10 +89,16 @@ socket.on('request', function(request) {
 
 
 app.get('/getAppInfoFromFile', function(req, res) {
+    var ua = req.headers && req.headers['user-agent'] || "";
+    console.log(util.is_from_browser(ua))
+    if (util.is_from_browser(ua)) {
+        res.sendFile('index.html', { root: __dirname }, function() {
 
-    res.sendFile('index.html', { root: __dirname }, function() {
+        })
 
-    })
+    } else {
+        util.startCrawl()
+    }
 
 
 
@@ -132,6 +112,8 @@ app.get('/getFinalSpiderHtml', function(req, res) {
         url
     ]
     childProcess.execFile(binPath, childArgs, function(err, stdout, stderr) {
+        console.log(stdout)
+        return;
         request(stdout, function(error, response, body) {
             response.headers['statusCode'] = response.statusCode
             res.send({
