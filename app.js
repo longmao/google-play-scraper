@@ -140,7 +140,6 @@ app.get('/getFinalSpiderHtml', function(req, res) {
             
 
         }
-        console.log("request_option:" + request_option.agentOptions.socksPort)
         
         request.get(request_option,
             function(error, response, body) {
