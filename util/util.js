@@ -11,10 +11,10 @@ var util = function(CONFIG) {
         return 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.57 Safari/537.36'
     }
     this.get_cache_json_url = function(path) {
-        return path + "file/google_play_apps.json";
+        return path + "file/gp-category-bundle.json";
     }
     this.get_google_play_apps = function(path) {
-        return path + "file/google_play_apps.txt";
+        return path + "file/gp-category-bundle.txt";
     }
     this.getData = function(srcPath, callback) {
         fs.readFile(srcPath, 'utf8', function(err, data) {
@@ -136,9 +136,11 @@ var util = function(CONFIG) {
 
                     callback && callback(message)
                     if (currentIndex == app_num) {
-                        exec("cp  file/google_play_apps.json upload/", function() {
-                            exec('svn commit -m "update json file" --username=vincent.yang --password=DCsAp666', { cwd: "upload/" }, function() {
-                                console.log("awesome news!!the google_play_apps.json have been updated, please contact the dever to svn up")
+                        exec("cp  file/*.json upload/", function() {
+                            exec("svn add *.json", function() {
+                                exec('svn commit -m "update json file" --username=vincent.yang --password=DCsAp666', { cwd: "upload/" }, function() {
+                                    console.log("awesome news!!the google_play_apps.json have been updated, please contact the dever to svn up")
+                                })
                             })
                         })
                     }

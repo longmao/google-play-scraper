@@ -11,7 +11,6 @@ var childProcess = require('child_process')
 var phantomjs = require('phantomjs')
 var binPath = phantomjs.path
 
-
 var request = require('request');
 
 require('events').EventEmitter.defaultMaxListeners = Infinity;
@@ -106,28 +105,54 @@ app.get('/getAppInfoFromFile', function(req, res) {
 })
 app.get('/getFinalSpiderHtml', function(req, res) {
     var url = req.query.url || "http://global.ymtracking.com/trace?offer_id=116686&aff_id=1&aff_sub=unlock%40%4056f33980e4b0f048710723e4&android_id=375dec1f7a6c588e";
-    var childArgs = [
-        path.join(__dirname, 'phantomjs-script.js'),
-        url
-    ]
+    var ua = req.query.ua || "";
+    var proxy_server = "http://" + req.query.proxy_ip + ":" + req.query.proxy_port;
+    var childArgs;
+    if (req.query.proxy_ip && req.query.proxy_port) {
+        childArgs = [
+            '--proxy=' + proxy_server,
+            path.join(__dirname, 'phantomjs-script.js'),
+            url,
+            ua
+        ]
+    } else {
+        childArgs = [
+            path.join(__dirname, 'phantomjs-script.js'),
+            url,
+            ua
+        ]
+    }
     var headers = {
-        'User-Agent': util.getUA()
+        'User-Agent': ua || util.getUA()
     };
     childProcess.execFile(binPath, childArgs, function(err, stdout, stderr) {
+        var request_option = {
+            url: stdout,
+            headers: headers
+        }
 
-        request({ url: stdout, headers: headers }, function(error, response, body) {
-            response.headers['statusCode'] = response.statusCode
-            res.send({
-                html: body,
-                headers: response.headers,
-                finalUrl: stdout
-            });
-        })
+        if (req.query.proxy_ip && req.query.proxy_port) {
+            request_option.agentClass = require('socks5-http-client/lib/Agent');
+            request_option.agentOptions = {
+                socksHost: req.query.proxy_ip, // Defaults to 'localhost'.
+                socksPort: req.query.proxy_port // Defaults to 1080.
+            }
+            
+
+        }
+        console.log("request_option:" + request_option.agentOptions.socksPort)
+        
+        request.get(request_option,
+            function(error, response, body) {
+                response.headers['statusCode'] = response.statusCode
+                res.send({
+                    html: body,
+                    headers: response.headers,
+                    finalUrl: stdout
+                });
+            })
+
     })
-
-
-
-
 })
 
 app.get('/', function(req, res) {
