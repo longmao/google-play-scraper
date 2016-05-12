@@ -11,9 +11,10 @@ var childProcess = require('child_process')
 var phantomjs = require('phantomjs')
 var binPath = phantomjs.path
 
-var request = require('request');
+var request = require('request').defaults({maxRedirects:50});
 
-require('events').EventEmitter.defaultMaxListeners = Infinity;
+require('events').EventEmitter.defaultMaxListeners = 0;
+    
 
 var http = require('http');
 var websocket_server = require('websocket').server
