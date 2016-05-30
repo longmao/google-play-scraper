@@ -16,6 +16,11 @@ var util = function(CONFIG) {
     this.get_google_play_apps = function(path) {
         return path + "file/gp-category-bundle.txt";
     }
+    this.addIndexToArray = function(arr) {
+        _.forEach(arr,function (app, index) {
+            arr[index].app_category_rank = index + 1
+        })
+    }
     this.getData = function(srcPath, callback) {
         fs.readFile(srcPath, 'utf8', function(err, data) {
             if (err) throw err;
@@ -150,6 +155,8 @@ var util = function(CONFIG) {
             })
         })(app_id, url, app_num)
     }
+
+
 
 }
 

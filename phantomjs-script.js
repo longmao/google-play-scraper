@@ -2,6 +2,7 @@ var system = require('system');
 var content = ""
 var url = "http://global.ymtracking.com/trace?offer_id=116686&aff_id=1&aff_sub=unlock%40%4056f33980e4b0f048710723e4&android_id=375dec1f7a6c588e"
 var final_url = ""
+var redirects_time = 0
 var ua='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.57 Safari/537.36';
 function checkRedirects(myurl) {
     page = require('webpage').create();

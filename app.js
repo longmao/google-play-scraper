@@ -11,10 +11,10 @@ var childProcess = require('child_process')
 var phantomjs = require('phantomjs')
 var binPath = phantomjs.path
 
-var request = require('request').defaults({maxRedirects:50});
+var request = require('request').defaults({ maxRedirects: 50 });
 
 require('events').EventEmitter.defaultMaxListeners = 0;
-    
+
 
 var http = require('http');
 var websocket_server = require('websocket').server
@@ -45,8 +45,26 @@ var socket = new websocket_server({
     httpServer: http.createServer().listen(1337)
 });
 
+var Promise = require('bluebird');
 
+var appList = require('./util/appList.js')()
+app.get('/getAppListInfo', function(req, res) {
 
+    appList
+        .getAppList()
+        .then(function(apps, category) {
+
+            util.addIndexToArray(apps)
+            var obj = {}
+            obj[category] = apps
+            var appendStr = JSON.stringify(obj)
+            util.writeData("./file/top_category_500.json", "", "", function() {
+                util.appendData("./file/top_category_500.json", appendStr, "save top 500 app which category is " + category)
+            })
+            res.send(apps)
+
+        });
+})
 
 app.get('/getAppInfo', function(req, res) {
     if (!req.query || !req.query.id) return res.send({ msg: "app id can not empty" })
@@ -126,7 +144,9 @@ app.get('/getFinalSpiderHtml', function(req, res) {
     var headers = {
         'User-Agent': ua || util.getUA()
     };
+    console.log(324234)
     childProcess.execFile(binPath, childArgs, function(err, stdout, stderr) {
+
         var request_option = {
             url: stdout,
             headers: headers
@@ -138,10 +158,11 @@ app.get('/getFinalSpiderHtml', function(req, res) {
                 socksHost: req.query.proxy_ip, // Defaults to 'localhost'.
                 socksPort: req.query.proxy_port // Defaults to 1080.
             }
-            
+
 
         }
-        
+
+
         request.get(request_option,
             function(error, response, body) {
                 response.headers['statusCode'] = response.statusCode
