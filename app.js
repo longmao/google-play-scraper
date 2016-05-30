@@ -52,14 +52,11 @@ app.get('/getAppListInfo', function(req, res) {
 
     appList
         .getAppList()
-        .then(function(apps, category) {
+        .then(function(obj) {
 
-            util.addIndexToArray(apps)
-            var obj = {}
-            obj[category] = apps
             var appendStr = JSON.stringify(obj)
             util.writeData("./file/top_category_500.json", "", "", function() {
-                util.appendData("./file/top_category_500.json", appendStr, "save top 500 app which category is " + category)
+                util.appendData("./file/top_category_500.json", appendStr, "save top 500 app")
             })
             res.send(apps)
 
