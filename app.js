@@ -127,8 +127,11 @@ app.get('/getFinalSpiderHtml', function(req, res) {
         'User-Agent': ua || util.getUA()
     };
     childProcess.execFile(binPath, childArgs, function(err, stdout, stderr) {
+        var url = stdout.substring(0,stdout.indexOf("&redirects_time"));
+        var redirects_time = parseInt(stdout.substring(stdout.indexOf("&redirects_time") + 16))
+
         var request_option = {
-            url: stdout,
+            url: url,
             headers: headers
         }
 
@@ -148,7 +151,8 @@ app.get('/getFinalSpiderHtml', function(req, res) {
                 res.send({
                     html: body,
                     headers: response.headers,
-                    finalUrl: stdout
+                    finalUrl: url,
+                    redirects_time: redirects_time
                 });
             })
 
