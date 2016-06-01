@@ -87,8 +87,20 @@ var util = function(CONFIG) {
     }
     this.requestHandler = function(request_option, res, req, redirects_time, childArgs, ua) {
         console.log(request_option)
+        request_option.timeout = 30000;
         request.get(request_option,
             function(error, response, body) {
+                console.log(error)
+                if (error) {
+                    return res.send({
+                        html: error.toString(),
+                        headers: "",
+                        finalUrl: "",
+                        redirects_time: "",
+
+                    });
+                }
+
                 response.headers['statusCode'] = response.statusCode;
                 var matchedMeta = body.match(/<meta.*http-equiv="refresh".*content="(.*)".*>/)
                 var matchedUrl = "";
