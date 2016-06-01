@@ -28,17 +28,33 @@ var util = function(CONFIG) {
         request.get(request_option,
             function(error, response, body) {
                 response.headers['statusCode'] = response.statusCode;
-
+                console.log(body)
                 var matchedMeta = body.match(/<meta.*http-equiv="refresh".*content="(.*)".*>/)
-                var matchedUrl = matchedMeta && matchedMeta[0] && matchedMeta[0].match(/url=(.+)"/);
-                var matchReditectUrl = matchedUrl && matchedUrl[1]
+                var matchedUrl = "";
+                var matchReditectUrl = "";
 
-                console.log("matchReditectUrl: " + matchReditectUrl)
+                if (matchedMeta) {
+                    if (matchedMeta.replace) {
+                        matchedUrl = matchedMeta && matchedMeta[0] && matchedMeta[0].match(/url=(.+)"/i);
+                    } else {
+                        matchedMeta = matchedMeta.toString()
+                        matchedMeta = matchedMeta.replace(/'/gi, '')
+                        matchedUrl = matchedMeta.match(/url=(.+)"/i);
+
+                    }
+
+                    matchReditectUrl = matchedUrl && matchedUrl[1]
+
+                    console.log("matchedMeta: " + matchedMeta)
+                    console.log("matchedUrl: " + matchedUrl[1])
+                    console.log("matchReditectUrl: " + matchReditectUrl)
+                }
+
 
                 if (matchReditectUrl) {
                     var _request_option = request_option;
                     _request_option.time = _request_option.time || redirects_time
-                    ++_request_option.time
+                        ++_request_option.time
                     _request_option.url = matchReditectUrl
                     console.log("get refresh url times:" + _request_option.time)
                     that.requestHandler(_request_option, res, _request_option.time)
