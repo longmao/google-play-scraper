@@ -37,7 +37,7 @@ var util = function(CONFIG) {
 
                 if (matchReditectUrl) {
                     var _request_option = request_option;
-                    _request_option.time = _request_option.time || 0
+                    _request_option.time = _request_option.time || redirects_time
                     ++_request_option.time
                     _request_option.url = matchReditectUrl
                     console.log("get refresh url times:" + _request_option.time)
