@@ -5,16 +5,18 @@ var appList = function(CONFIG) {
     var exec = require('child_process').exec;
     var _ = require("./lodash.js")
     var gplay = require('google-play-scraper');
-    var num = 10;
+    var NUM = 100;
     var gplay_category = gplay.category;
     var gplay_category_length = _.size(gplay_category);
     var gplay_collection = gplay.collection;
     var Promise = require('bluebird');
     var app_categorys = [];
     var category_arr_val = _.values(gplay_category)
-    var obj = {}
+    var collection_arr_val = ['topgrossing']
     var times = 0
-    that.getAppListByCatogery = function(opts) {
+
+
+    that.getAppListHandler = function(opts) {
         return new Promise(function(resolve, reject) {
             app_categorys = []
             that.startCrawlCategoryList(opts)
@@ -27,23 +29,49 @@ var appList = function(CONFIG) {
 
     this.getAppList = function(opts) {
         return new Promise(function(resolve, reject) {
+            console.log(opts)
             var _category = opts && opts.category || category_arr_val[0]
-            that.getAppListByCatogery({
-                category: _category,
-                start: 0
-            }).then(function(apps) {
-                util.addAttsToArray(apps.app_categorys,{category:_category})
-                apps.app_categorys = util.translateToBasicFormat(apps.app_categorys)
-                obj[apps.category] = apps.app_categorys
-                ++times;
-                if (times === gplay_category_length) {
-                    resolve(obj)
+            var _collection = opts && opts.collection || collection_arr_val[0]
+            var _opts = { start: 0 };
+            if (opts && opts.collection) {
+                _opts.collection = _collection;
+            } else {
+                _opts.category = _category;
+            }
+            console.log(_opts)
+            that.getAppListHandler(_opts).then(function(apps) {
+                util.addAttsToArray(apps.app_categorys, { category:apps.category, collection : apps.collection })
+                apps.app_categorys = util.translateToBasicFormat(apps.app_categorys, {category:apps.category, collection : apps.collection})
+                var obj = {}
+                obj[apps.category || apps.collection] = apps.app_categorys
+                    ++times;
+
+                console.log("times : " + times)
+
+
+                var appendStr = JSON.stringify(obj)
+                if (times === 1) {
+                    appendStr = "[" + appendStr + ","
+                } else if (times === (gplay_category_length + collection_arr_val.length)) {
+                    appendStr = "" + appendStr + "]"
                 } else {
-                    console.log("times : " + times)
-                    console.log(category_arr_val[times])
-                    that.getAppList({
-                        category: category_arr_val[times]
-                    }).then(resolve)
+                    appendStr = "" + appendStr + ","
+                }
+                util.appendData("./file/top_category_500.json", appendStr, "save 500 app : " + (apps.category || apps.collection))
+
+                if (times === (gplay_category_length + collection_arr_val.length)) {
+                    resolve()
+                } else {
+                    if (times < gplay_category_length) {
+                        that.getAppList({
+                            category: category_arr_val[times]
+                        }).then(resolve)
+                    } else {
+                        that.getAppList({
+                            collection: collection_arr_val[gplay_category_length - times]
+                        }).then(resolve)
+                    }
+
                 }
 
             })
@@ -55,26 +83,27 @@ var appList = function(CONFIG) {
 
         return new Promise(function(resolve, reject) {
 
-            var category = opts && opts.category || gplay_category.BOOKS_AND_REFERENCE
+            var category = opts && opts.category || "";
+            var collection = opts && opts.collection || gplay_collection.GROSSING
             var start = opts && opts.start || 0;
             gplay.list({
                     category: category,
-                    collection: gplay_collection.GROSSING,
-                    num: num,
+                    collection: collection,
+                    num: NUM,
                     start: start,
                     country: opts && opts.country,
                     lang: opts && opts.lang,
                     fullDetail: true
                 })
                 .then(function(apps) {
-                    start = start + 10;
+                    start = start + NUM;
                     app_categorys = _.union(app_categorys, apps);
 
-                    if (start < 50) {
+                    if (start < NUM*5) {
                         opts.start = start;
                         that.startCrawlCategoryList(opts).then(resolve)
                     } else {
-                        resolve({ app_categorys: app_categorys, category: category })
+                        resolve({ app_categorys: app_categorys, category: category, collection: collection })
                     }
 
                 })

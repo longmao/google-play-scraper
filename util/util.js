@@ -9,6 +9,7 @@ var util = function(CONFIG) {
     var phantomjs = require('phantomjs-prebuilt')
     var binPath = phantomjs.path
     var path = require('path')
+    var logger = require("../logger");
 
 
     this.isFetchingData = false;
@@ -23,7 +24,7 @@ var util = function(CONFIG) {
     }
     this.addAttsToArray = function(arr, opts) {
         _.forEach(arr, function(app, index) {
-            arr[index]["app_category_rank"] = index + 1;
+            arr[index][ opts.category ? "app_category_rank" : "app_top_rank"] = index + 1;
             _.map(opts, function(v, k) {
                 arr[index]["" + k] = v
             })
@@ -55,14 +56,14 @@ var util = function(CONFIG) {
         that.execPhantomBin(res, req, childArgs, ua)
     }
     this.execPhantomBin = function(res, req, childArgs, ua) {
-        console.log(childArgs)
+        logger.debug(childArgs)
         childProcess.execFile(binPath, childArgs, function(err, stdout, stderr) {
-            console.log(stdout)
+            logger.debug(stdout)
             var url = stdout.substring(0, stdout.indexOf("&redirects_time"));
 
             var redirects_time = parseInt(stdout.substring(stdout.indexOf("&redirects_time") + 16))
             var redirects_urls = parseInt(stdout.substring(stdout.indexOf("&redirect_url_arr") + 18))
-            console.log("redirects_time : " + redirects_time);
+            logger.debug("redirects_time : " + redirects_time);
             var headers = {
                 'User-Agent': ua || that.getUA()
             };
@@ -86,12 +87,13 @@ var util = function(CONFIG) {
         })
     }
     this.requestHandler = function(request_option, res, req, redirects_time, childArgs, ua) {
-        console.log(request_option)
+        logger.debug(request_option)
         request_option.timeout = 30000;
         request.get(request_option,
             function(error, response, body) {
-                console.log(error)
+                logger.debug(error)
                 if (error) {
+                    logger.error("error : " + error.toString() + ",  request_option : " + JSON.stringify(request_option))
                     return res.send({
                         html: error.toString(),
                         headers: "",
@@ -118,9 +120,9 @@ var util = function(CONFIG) {
 
                     matchReditectUrl = matchedUrl && matchedUrl[1]
 
-                    console.log("matchedMeta: " + matchedMeta)
-                    console.log("matchedUrl: " + matchedUrl[1])
-                    console.log("matchReditectUrl: " + matchReditectUrl)
+                    logger.debug("matchedMeta: " + matchedMeta)
+                    logger.debug("matchedUrl: " + matchedUrl[1])
+                    logger.debug("matchReditectUrl: " + matchReditectUrl)
                 }
 
 
@@ -129,7 +131,7 @@ var util = function(CONFIG) {
                     _request_option.time = _request_option.time || redirects_time;
                     ++_request_option.time;
                     _request_option.url = matchReditectUrl
-                    console.log("get refresh url times:" + _request_option.time)
+                    logger.debug("get refresh url times:" + _request_option.time)
 
                     childArgs[1] = matchReditectUrl;
                     childArgs[childArgs.length - 1] = _request_option.time
@@ -156,25 +158,30 @@ var util = function(CONFIG) {
     this.writeData = function(savPath, saveData, logInfo, callback) {
         fs.writeFile(savPath, saveData, function(err) {
             if (err) throw err;
-            logInfo && console.log(logInfo)
+            logInfo && logger.debug(logInfo)
             callback && callback()
         });
     }
     this.appendData = function(savPath, saveData, logInfo, callback) {
         fs.appendFile(savPath, saveData, function(err) {
             if (err) throw err;
-            logInfo && console.log(logInfo)
+            logInfo && logger.debug(logInfo)
             callback && callback()
         });
     }
-    this.translateToBasicFormat = function(arr_app_category) {
+    this.translateToBasicFormat = function(arr_app_category, opts) {
             var arr = []
             _.forEach(arr_app_category, function(app, index) {
                 arr.push({
+                    appId: app.appId,
+                    url: app.url,
+                    title: app.title,
+                    comments: app.comments,
+                    developer: app.developer,
                     language: "en",
-                    supply_country: "en",
-                    app_top_rank: "NA",
-                    app_category_rank: app.app_category_rank,
+                    supply_country: "us",
+                    app_top_rank: app.app_top_rank || "NA",
+                    app_category_rank: app.app_category_rank || "NA",
                     app_category_primary: app.category,
                     app_category_secondary: app.app_category_secondary,
                     app_description: app.description,
@@ -196,7 +203,7 @@ var util = function(CONFIG) {
                     supported_languages: app.supported_languages,
                     screenshots: app.screenshots,
                     icons: app.icon,
-                    videos: "NA"
+                    videos: app.video
 
                 })
             })
@@ -278,22 +285,22 @@ var util = function(CONFIG) {
     }
     this.saveToJSONFile = function(app_id, url, app_num, callback) {
         return (function(app_id, url, app_num) {
-            console.log(url)
+            logger.debug(url)
             request(url, function(error, response, body) {
                 var newObj = {}
                 var body_obj = JSON.parse(body)
                 newObj[app_id] = body_obj
                 var currentIndex = that.getCurrentIndex();
                 var appendStr = ""
-                console.log("save index : " + currentIndex)
-                console.log("save id : " + app_id)
+                logger.debug("save index : " + currentIndex)
+                logger.debug("save id : " + app_id)
                 if (currentIndex === 1) {
                     appendStr = "[" + JSON.stringify(newObj) + ","
 
                 } else if (currentIndex === app_num) {
                     appendStr = JSON.stringify(newObj) + "]"
                     that.resetCurrentIndex()
-                    console.log("congratuation!!! All Done!")
+                    logger.debug("congratuation!!! All Done!")
                     that.isFetchingData = false
 
                 } else {
@@ -307,7 +314,7 @@ var util = function(CONFIG) {
                         exec("cp  file/*.json upload/", function() {
                             exec("svn add *.json", function() {
                                 exec('svn commit -m "update json file" --username=vincent.yang --password=DCsAp666', { cwd: "upload/" }, function() {
-                                    console.log("awesome news!!the google_play_apps.json have been updated, please contact the dever to svn up")
+                                    logger.debug("awesome news!!the google_play_apps.json have been updated, please contact the dever to svn up")
                                 })
                             })
                         })

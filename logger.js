@@ -7,6 +7,8 @@ var logDirectory = __dirname + '/logs'
 fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory)
 fs.writeFileSync(logDirectory + '/error.log', '', 'utf8');
 fs.writeFileSync(logDirectory + '/access.log', '', 'utf8');
+fs.writeFileSync(logDirectory + '/debug.log', '', 'utf8');
+
 
 var logger = new(winston.Logger)({
     transports: [
@@ -25,6 +27,16 @@ var logger = new(winston.Logger)({
             name: 'info-file',
             filename: logDirectory + '/access.log',
             level: 'info',
+            handleExceptions: true,
+            json: true,
+            maxsize: 5242880, //5MB
+            maxFiles: 5,
+            colorize: false
+        }),
+        new(winston.transports.File)({
+            name: 'debug-file',
+            filename: logDirectory + '/debug.log',
+            level: 'debug',
             handleExceptions: true,
             json: true,
             maxsize: 5242880, //5MB

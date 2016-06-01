@@ -58,15 +58,12 @@ app.get('/getAppListInfo', function(req, res) {
         console.log('worker' + cluster.worker.id);
         if (util.scrawListStatus === "scrawling" || util.scrawListStatus === "finished") return
         client.set("scrawListStatus", "scrawling");
+        util.writeData("./file/top_category_500.json", "", "", function() {})
         appList
             .getAppList()
-            .then(function(obj) {
+            .then(function() {
                 client.set("scrawListStatus", "finished");
-                var appendStr = JSON.stringify(obj)
-                util.writeData("./file/top_category_500.json", "", "", function() {
-                    util.appendData("./file/top_category_500.json", appendStr, "save top 500 app")
-                })
-                res.send(obj)
+                res.send("Congratulation!!! ")
 
             });
     });
@@ -130,7 +127,7 @@ app.get('/getAppInfoFromFile', function(req, res) {
 
 })
 app.get('/getFinalSpiderHtml', function(req, res) {
-    util.getFinalSpiderHtml(req,res)
+    util.getFinalSpiderHtml(req, res)
 })
 
 app.get('/', function(req, res) {
