@@ -8,7 +8,7 @@ var app = express()
 var numCPUs = require('os').cpus().length;
 var path = require('path')
 var childProcess = require('child_process')
-var phantomjs = require('phantomjs')
+var phantomjs = require('phantomjs-prebuilt')
 var binPath = phantomjs.path
 
 var request = require('request').defaults({ maxRedirects: 50 });
@@ -37,7 +37,7 @@ if (cluster.isMaster) {
 
 } else if (cluster.isWorker) {
     console.log('[worker] ' + "start worker ..." + cluster.worker.id);
-    app.listen(8888);
+    app.listen(process.env.port || 8888);
 }
 
 
@@ -46,21 +46,31 @@ var socket = new websocket_server({
 });
 
 var Promise = require('bluebird');
-
+var redis = require("redis"),
+    client = redis.createClient();
 var appList = require('./util/appList.js')()
+client.set("scrawListStatus", "ready");
+
 app.get('/getAppListInfo', function(req, res) {
+    client.get("scrawListStatus", function(err, reply) {
+        util.scrawListStatus = reply.toString()
+        console.log(util.scrawListStatus)
+        console.log('worker' + cluster.worker.id);
+        if (util.scrawListStatus === "scrawling" || util.scrawListStatus === "finished") return
+        client.set("scrawListStatus", "scrawling");
+        appList
+            .getAppList()
+            .then(function(obj) {
+                client.set("scrawListStatus", "finished");
+                var appendStr = JSON.stringify(obj)
+                util.writeData("./file/top_category_500.json", "", "", function() {
+                    util.appendData("./file/top_category_500.json", appendStr, "save top 500 app")
+                })
+                res.send(obj)
 
-    appList
-        .getAppList()
-        .then(function(obj) {
+            });
+    });
 
-            var appendStr = JSON.stringify(obj)
-            util.writeData("./file/top_category_500.json", "", "", function() {
-                util.appendData("./file/top_category_500.json", appendStr, "save top 500 app")
-            })
-            res.send(apps)
-
-        });
 })
 
 app.get('/getAppInfo', function(req, res) {
@@ -135,15 +145,19 @@ app.get('/getFinalSpiderHtml', function(req, res) {
         childArgs = [
             path.join(__dirname, 'phantomjs-script.js'),
             url,
-            ua
+            ua,
+            '--ignore-ssl-errors=true',
+            '--ssl-protocol=tlsv1',
+            '--local-to-remote-url-access=true'
+
         ]
     }
     var headers = {
         'User-Agent': ua || util.getUA()
     };
     childProcess.execFile(binPath, childArgs, function(err, stdout, stderr) {
-
-        var url = stdout.substring(0,stdout.indexOf("&redirects_time"));
+        console.log(stdout)
+        var url = stdout.substring(0, stdout.indexOf("&redirects_time"));
         var redirects_time = parseInt(stdout.substring(stdout.indexOf("&redirects_time") + 16))
 
         var request_option = {
@@ -160,18 +174,8 @@ app.get('/getFinalSpiderHtml', function(req, res) {
 
 
         }
+        util.requestHandler(request_option, res, redirects_time)
 
-
-        request.get(request_option,
-            function(error, response, body) {
-                response.headers['statusCode'] = response.statusCode
-                res.send({
-                    html: body,
-                    headers: response.headers,
-                    finalUrl: url,
-                    redirects_time: redirects_time
-                });
-            })
 
     })
 })

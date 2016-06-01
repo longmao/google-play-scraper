@@ -14,16 +14,14 @@ function checkRedirects(myurl) {
 
     // pretend to be a different browser, helps with some shitty browser-detection scripts
     page.settings.userAgent = ua;
-    page.onResourceReceived = function(response) {
-        //console.log(JSON.stringify(response.headers));
+    page.onResourceReceived = function(resource) {
+        if (url == resource.url && resource.redirectURL) {
+            redirectURL = resource.redirectURL;
+        }
     };
     page.onNavigationRequested = function(url, type, willNavigate, main) {
         if (
-            main &&
-            url.match(/^http/ig) &&
-            url != myurl &&
-            url.replace(/\/$/, "") != myurl &&
-            (type == "Other" || type == "Undefined") //  type = not by click/submit etc
+            url != myurl 
         ) {
             page.close();
             final_url = url;
@@ -33,6 +31,7 @@ function checkRedirects(myurl) {
     };
     page.open(myurl, function(status) {
         //console.log("newurl: " + myurl)
+        //console.log("page content :  " + page.content)
     });
 }
 // get url from cli

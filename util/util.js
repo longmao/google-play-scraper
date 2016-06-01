@@ -16,10 +16,42 @@ var util = function(CONFIG) {
     this.get_google_play_apps = function(path) {
         return path + "file/gp-category-bundle.txt";
     }
-    this.addIndexToArray = function(arr) {
-        _.forEach(arr,function (app, index) {
-            arr[index].app_category_rank = index + 1
+    this.addAttsToArray = function(arr, opts) {
+        _.forEach(arr, function(app, index) {
+            arr[index]["app_category_rank"] = index + 1;
+            _.map(opts, function(v, k) {
+                arr[index]["" + k] = v
+            })
         })
+    }
+    this.requestHandler = function(request_option, res, redirects_time) {
+        request.get(request_option,
+            function(error, response, body) {
+                response.headers['statusCode'] = response.statusCode;
+
+                var matchedMeta = body.match(/<meta.*http-equiv="refresh".*content="(.*)".*>/)
+                var matchedUrl = matchedMeta && matchedMeta[0] && matchedMeta[0].match(/url=(.+)"/);
+                var matchReditectUrl = matchedUrl && matchedUrl[1]
+
+                console.log("matchReditectUrl: " + matchReditectUrl)
+
+                if (matchReditectUrl) {
+                    var _request_option = request_option;
+                    _request_option.time = _request_option.time || 0
+                    ++_request_option.time
+                    _request_option.url = matchReditectUrl
+                    console.log("get refresh url times:" + _request_option.time)
+                    that.requestHandler(_request_option, res, _request_option.time)
+                } else {
+                    res.send({
+                        html: body,
+                        headers: response.headers,
+                        finalUrl: request_option.url,
+                        redirects_time: redirects_time
+                    });
+                }
+
+            })
     }
     this.getData = function(srcPath, callback) {
         fs.readFile(srcPath, 'utf8', function(err, data) {
@@ -30,19 +62,56 @@ var util = function(CONFIG) {
     this.writeData = function(savPath, saveData, logInfo, callback) {
         fs.writeFile(savPath, saveData, function(err) {
             if (err) throw err;
+            logInfo && console.log(logInfo)
             callback && callback()
         });
     }
     this.appendData = function(savPath, saveData, logInfo, callback) {
         fs.appendFile(savPath, saveData, function(err) {
             if (err) throw err;
+            logInfo && console.log(logInfo)
             callback && callback()
         });
     }
+    this.translateToBasicFormat = function(arr_app_category) {
+            var arr = []
+            _.forEach(arr_app_category, function(app, index) {
+                arr.push({
+                    language: "en",
+                    supply_country: "en",
+                    app_top_rank: "NA",
+                    app_category_rank: app.app_category_rank,
+                    app_category_primary: app.category,
+                    app_category_secondary: app.app_category_secondary,
+                    app_description: app.description,
+                    free: app.free,
+                    iap: app.offersIAP,
+                    price: app.price,
+                    rating_average: app.score,
+                    rating_current_version: app.score,
+                    rating_counts_average: app.reviews,
+                    content_rating: app.contentRating,
+                    file_size_bytes: app.size,
+                    created: app.updated,
+                    updated: app.updated,
+                    downloads: app.minInstalls + " - " + app.maxInstalls,
+                    what_is_new: app.whatisnew,
+                    permissions: app.permissions || "",
+                    min_os_version: app.requiredAndroidVersion,
+                    supported_devices: app.requiredAndroidVersion,
+                    supported_languages: app.supported_languages,
+                    screenshots: app.screenshots,
+                    icons: app.icon,
+                    videos: "NA"
 
-    this.getCurrentIndex = function() {
-        return ++_index
-    }
+                })
+            })
+            return arr;
+
+        },
+        this.getCurrentIndex = function() {
+            return ++_index
+        }
     this.resetCurrentIndex = function() {
         _index = 0
     }
@@ -91,7 +160,7 @@ var util = function(CONFIG) {
     }
     this.startCrawl = function(callback) {
         var util = that
-        if(util.isFetchingData) return
+        if (util.isFetchingData) return
         util.isFetchingData = true
         util.writeData(util.get_cache_json_url("./"), "", "", function() {
             util.getData(util.get_google_play_apps("./"), function(data) {
