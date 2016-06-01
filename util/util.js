@@ -5,6 +5,11 @@ var util = function(CONFIG) {
     var that = this
     var exec = require('child_process').exec;
     var _ = require("./lodash.js")
+    var childProcess = require('child_process')
+    var phantomjs = require('phantomjs-prebuilt')
+    var binPath = phantomjs.path
+    var path = require('path')
+
 
     this.isFetchingData = false;
     this.getUA = function() {
@@ -24,11 +29,67 @@ var util = function(CONFIG) {
             })
         })
     }
-    this.requestHandler = function(request_option, res, redirects_time) {
+
+    this.getFinalSpiderHtml = function(req, res) {
+        var url = req.query.url || "";
+        var ua = req.query.ua || "";
+        var proxy_server = "http://" + req.query.proxy_ip + ":" + req.query.proxy_port;
+        var childArgs;
+        if (req.query.proxy_ip && req.query.proxy_port) {
+            childArgs = [
+                path.join(__dirname, '../phantomjs-script.js'),
+                url,
+                ua,
+                '--proxy=' + proxy_server,
+                0
+            ]
+        } else {
+            childArgs = [
+                path.join(__dirname, '../phantomjs-script.js'),
+                url,
+                ua,
+                0
+            ]
+        }
+
+        that.execPhantomBin(res, req, childArgs, ua)
+    }
+    this.execPhantomBin = function(res, req, childArgs, ua) {
+        console.log(childArgs)
+        childProcess.execFile(binPath, childArgs, function(err, stdout, stderr) {
+            console.log(stdout)
+            var url = stdout.substring(0, stdout.indexOf("&redirects_time"));
+
+            var redirects_time = parseInt(stdout.substring(stdout.indexOf("&redirects_time") + 16))
+            var redirects_urls = parseInt(stdout.substring(stdout.indexOf("&redirect_url_arr") + 18))
+            console.log("redirects_time : " + redirects_time);
+            var headers = {
+                'User-Agent': ua || that.getUA()
+            };
+            var request_option = {
+                url: url,
+                headers: headers
+            }
+
+            if (req.query.proxy_ip && req.query.proxy_port) {
+                request_option.agentClass = require('socks5-http-client/lib/Agent');
+                request_option.agentOptions = {
+                    socksHost: req.query.proxy_ip, // Defaults to 'localhost'.
+                    socksPort: req.query.proxy_port // Defaults to 1080.
+                }
+
+
+            }
+            that.requestHandler(request_option, res, req, redirects_time, childArgs, ua)
+
+
+        })
+    }
+    this.requestHandler = function(request_option, res, req, redirects_time, childArgs, ua) {
+        console.log(request_option)
         request.get(request_option,
             function(error, response, body) {
                 response.headers['statusCode'] = response.statusCode;
-                console.log(body)
                 var matchedMeta = body.match(/<meta.*http-equiv="refresh".*content="(.*)".*>/)
                 var matchedUrl = "";
                 var matchReditectUrl = "";
@@ -53,17 +114,22 @@ var util = function(CONFIG) {
 
                 if (matchReditectUrl) {
                     var _request_option = request_option;
-                    _request_option.time = _request_option.time || redirects_time
-                        ++_request_option.time
+                    _request_option.time = _request_option.time || redirects_time;
+                    ++_request_option.time;
                     _request_option.url = matchReditectUrl
                     console.log("get refresh url times:" + _request_option.time)
-                    that.requestHandler(_request_option, res, _request_option.time)
+
+                    childArgs[1] = matchReditectUrl;
+                    childArgs[childArgs.length - 1] = _request_option.time
+
+                    that.execPhantomBin(res, req, childArgs, ua)
                 } else {
                     res.send({
                         html: body,
                         headers: response.headers,
                         finalUrl: request_option.url,
-                        redirects_time: redirects_time
+                        redirects_time: redirects_time,
+
                     });
                 }
 

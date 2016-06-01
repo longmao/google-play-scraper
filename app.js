@@ -130,54 +130,7 @@ app.get('/getAppInfoFromFile', function(req, res) {
 
 })
 app.get('/getFinalSpiderHtml', function(req, res) {
-    var url = req.query.url || "http://global.ymtracking.com/trace?offer_id=116686&aff_id=1&aff_sub=unlock%40%4056f33980e4b0f048710723e4&android_id=375dec1f7a6c588e";
-    var ua = req.query.ua || "";
-    var proxy_server = "http://" + req.query.proxy_ip + ":" + req.query.proxy_port;
-    var childArgs;
-    if (req.query.proxy_ip && req.query.proxy_port) {
-        childArgs = [
-            '--proxy=' + proxy_server,
-            path.join(__dirname, 'phantomjs-script.js'),
-            url,
-            ua
-        ]
-    } else {
-        childArgs = [
-            path.join(__dirname, 'phantomjs-script.js'),
-            url,
-            ua,
-            '--ignore-ssl-errors=true',
-            '--ssl-protocol=tlsv1',
-            '--local-to-remote-url-access=true'
-
-        ]
-    }
-    var headers = {
-        'User-Agent': ua || util.getUA()
-    };
-    childProcess.execFile(binPath, childArgs, function(err, stdout, stderr) {
-        console.log(stdout)
-        var url = stdout.substring(0, stdout.indexOf("&redirects_time"));
-        var redirects_time = parseInt(stdout.substring(stdout.indexOf("&redirects_time") + 16))
-
-        var request_option = {
-            url: url,
-            headers: headers
-        }
-
-        if (req.query.proxy_ip && req.query.proxy_port) {
-            request_option.agentClass = require('socks5-http-client/lib/Agent');
-            request_option.agentOptions = {
-                socksHost: req.query.proxy_ip, // Defaults to 'localhost'.
-                socksPort: req.query.proxy_port // Defaults to 1080.
-            }
-
-
-        }
-        util.requestHandler(request_option, res, redirects_time)
-
-
-    })
+    util.getFinalSpiderHtml(req,res)
 })
 
 app.get('/', function(req, res) {
