@@ -96,6 +96,7 @@ var util = function(CONFIG) {
                     logger.error("error : " + error.toString() + ",  request_option : " + JSON.stringify(request_option))
                     return res.send({
                         html: error.toString(),
+                        request_option: JSON.stringify(request_option),
                         headers: "",
                         finalUrl: "",
                         redirects_time: "",
