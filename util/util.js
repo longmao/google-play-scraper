@@ -12,6 +12,7 @@ var util = function(CONFIG) {
     var logger = require("../logger");
 
 
+
     this.isFetchingData = false;
     this.getUA = function() {
         return 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.57 Safari/537.36'
@@ -24,14 +25,14 @@ var util = function(CONFIG) {
     }
     this.addAttsToArray = function(arr, opts) {
         _.forEach(arr, function(app, index) {
-            arr[index][ opts.category ? "app_category_rank" : "app_top_rank"] = index + 1;
+            arr[index][opts.category ? "app_category_rank" : "app_top_rank"] = index + 1;
             _.map(opts, function(v, k) {
                 arr[index]["" + k] = v
             })
         })
     }
 
-    this.getFinalSpiderHtml = function(req, res) {
+    this.getFinalSpiderHtml = function(req, res, client) {
         var url = req.query.url || "";
         var ua = req.query.ua || "";
         var proxy_server = "http://" + req.query.proxy_ip + ":" + req.query.proxy_port;
@@ -53,9 +54,9 @@ var util = function(CONFIG) {
             ]
         }
 
-        that.execPhantomBin(res, req, childArgs, ua)
+        that.execPhantomBin(res, req, childArgs, ua, client)
     }
-    this.execPhantomBin = function(res, req, childArgs, ua) {
+    this.execPhantomBin = function(res, req, childArgs, ua, client) {
         logger.debug(childArgs)
         childProcess.execFile(binPath, childArgs, function(err, stdout, stderr) {
             logger.debug(stdout)
@@ -81,12 +82,14 @@ var util = function(CONFIG) {
 
 
             }
-            that.requestHandler(request_option, res, req, redirects_time, childArgs, ua)
+            client.sadd("redirects_url_" + req.query.url, redirects_urls)
+
+            that.requestHandler(request_option, res, req, redirects_time, childArgs, ua, client)
 
 
         })
     }
-    this.requestHandler = function(request_option, res, req, redirects_time, childArgs, ua) {
+    this.requestHandler = function(request_option, res, req, redirects_time, childArgs, ua, client) {
         logger.debug(request_option)
         request_option.timeout = 30000;
         request.get(request_option,
@@ -133,12 +136,16 @@ var util = function(CONFIG) {
                     ++_request_option.time;
                     _request_option.url = matchReditectUrl
                     logger.debug("get refresh url times:" + _request_option.time)
+                    client.sadd("redirects_url_" + req.query.url, redirects_urls)
 
                     childArgs[1] = matchReditectUrl;
                     childArgs[childArgs.length - 1] = _request_option.time
 
-                    that.execPhantomBin(res, req, childArgs, ua)
+                    that.execPhantomBin(res, req, childArgs, ua, client)
                 } else {
+                    client.smembers("redirects_url_" + req.query.url, function() {
+                        console.log(replies.toString())
+                    })
                     res.send({
                         html: body,
                         headers: response.headers,

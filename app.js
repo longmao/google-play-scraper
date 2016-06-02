@@ -20,6 +20,11 @@ var http = require('http');
 var websocket_server = require('websocket').server
 
 
+var Promise = require('bluebird');
+var redis = require("redis"),
+    client = redis.createClient();
+var appList = require('./util/appList.js')()
+var socket;
 
 app.use(require("morgan")("combined", { "stream": logger.stream }));
 
@@ -35,23 +40,45 @@ if (cluster.isMaster) {
         console.log('[master] ' + 'listening: worker' + worker.id + ',pid:' + worker.process.pid + ', Address:' + address.address + ":" + address.port);
     });
 
+
+    socket = new websocket_server({
+        httpServer: http.createServer().listen(1337)
+    });
+    var connection;
+    socket.on('request', function(request) {
+
+        connection = request.accept(null, request.origin);
+
+        connection.on('message', function(message) {
+            console.log(message)
+            if (message.utf8Data === "startCrawl") {
+                util.startCrawl(function(data) {
+                    connection.sendUTF(data);
+                })
+            }
+
+
+        });
+
+        connection.on('close', function(connection) {
+            console.log("close")
+            console.log('connection closed');
+        });
+    });
 } else if (cluster.isWorker) {
     console.log('[worker] ' + "start worker ..." + cluster.worker.id);
     app.listen(process.env.port || 8888);
+
 }
 
 
-var socket = new websocket_server({
-    httpServer: http.createServer().listen(1337)
-});
 
-var Promise = require('bluebird');
-var redis = require("redis"),
-    client = redis.createClient();
-var appList = require('./util/appList.js')()
+
 client.set("scrawListStatus", "ready");
 
+
 app.get('/getAppListInfo', function(req, res) {
+
     client.get("scrawListStatus", function(err, reply) {
         util.scrawListStatus = reply.toString()
         console.log(util.scrawListStatus)
@@ -86,27 +113,7 @@ app.get('/getAppInfo', function(req, res) {
             logger.error("url:" + req.url + ", satusCode:" + res.statusCode + ",the app id is not valid")
         });
 })
-var connection;
-socket.on('request', function(request) {
 
-    connection = request.accept(null, request.origin);
-
-    connection.on('message', function(message) {
-        console.log(message)
-        if (message.utf8Data === "startCrawl") {
-            util.startCrawl(function(data) {
-                connection.sendUTF(data);
-            })
-        }
-
-
-    });
-
-    connection.on('close', function(connection) {
-        console.log("close")
-        console.log('connection closed');
-    });
-});
 
 
 
@@ -127,7 +134,7 @@ app.get('/getAppInfoFromFile', function(req, res) {
 
 })
 app.get('/getFinalSpiderHtml', function(req, res) {
-    util.getFinalSpiderHtml(req, res)
+    util.getFinalSpiderHtml(req, res, client)
 })
 
 app.get('/', function(req, res) {
