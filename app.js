@@ -42,7 +42,7 @@ if (cluster.isMaster) {
 
 
     socket = new websocket_server({
-        httpServer: http.createServer().listen(1337)
+        httpServer: http.createServer().listen(process.env.ws_port || 1337)
     });
     var connection;
     socket.on('request', function(request) {

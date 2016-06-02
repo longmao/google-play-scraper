@@ -10,7 +10,7 @@ var util = function(CONFIG) {
     var binPath = phantomjs.path
     var path = require('path')
     var logger = require("../logger");
-
+    var md5 = require('md5');
 
 
     this.isFetchingData = false;
@@ -53,7 +53,12 @@ var util = function(CONFIG) {
                 0
             ]
         }
-
+        client.del("redirects_url_" + md5(req.query.url), function(err, replies) {
+            if (err) {
+                logger.error("redis srem failed:" + req.query.url)
+            }
+            console.log("srem : " + replies)
+        })
         that.execPhantomBin(res, req, childArgs, ua, client)
     }
     this.execPhantomBin = function(res, req, childArgs, ua, client) {
@@ -63,7 +68,7 @@ var util = function(CONFIG) {
             var url = stdout.substring(0, stdout.indexOf("&redirects_time"));
 
             var redirects_time = parseInt(stdout.substring(stdout.indexOf("&redirects_time") + 16))
-            var redirects_urls = parseInt(stdout.substring(stdout.indexOf("&redirect_url_arr") + 18))
+            var redirects_urls = stdout.substring(stdout.indexOf("&redirect_url_arr") + 18)
             logger.debug("redirects_time : " + redirects_time);
             var headers = {
                 'User-Agent': ua || that.getUA()
@@ -82,7 +87,11 @@ var util = function(CONFIG) {
 
 
             }
-            client.sadd("redirects_url_" + req.query.url, redirects_urls)
+            var redirects_urls_arr = redirects_urls.split("_url_");
+
+            _.each(redirects_urls_arr, function(v, k) {
+                client.sadd("redirects_url_" + md5(req.query.url), v)
+            })
 
             that.requestHandler(request_option, res, req, redirects_time, childArgs, ua, client)
 
@@ -136,23 +145,36 @@ var util = function(CONFIG) {
                     ++_request_option.time;
                     _request_option.url = matchReditectUrl
                     logger.debug("get refresh url times:" + _request_option.time)
-                    client.sadd("redirects_url_" + req.query.url, redirects_urls)
+                    client.sadd("redirects_url_" + md5(req.query.url), matchReditectUrl)
 
                     childArgs[1] = matchReditectUrl;
                     childArgs[childArgs.length - 1] = _request_option.time
 
                     that.execPhantomBin(res, req, childArgs, ua, client)
                 } else {
-                    client.smembers("redirects_url_" + req.query.url, function() {
-                        console.log(replies.toString())
-                    })
-                    res.send({
-                        html: body,
-                        headers: response.headers,
-                        finalUrl: request_option.url,
-                        redirects_time: redirects_time,
+                    client.smembers("redirects_url_" + md5(req.query.url), function(err, replies) {
+                        if (err) {
+                            logger.error("redis get redirects url failed:" + req.query.url)
+                        }
+                        console.log("replies: " + replies.toString())
+                        try {
 
-                    });
+                            _.each(replies, function(v, k) {
+                                replies[k] = _.trim(v)
+                            })
+
+                        } catch (e) {
+
+                        }
+                        res.send({
+                            html: body,
+                            headers: response.headers,
+                            finalUrl: request_option.url,
+                            redirects_time: redirects_time,
+                            redirects_url: replies
+                        });
+                    })
+
                 }
 
             })

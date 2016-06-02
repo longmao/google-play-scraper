@@ -19,6 +19,7 @@
     "socks5-http-client": "~1.0.2",
     "websocket": "^1.0.22",
     "winston": "~2.2.0",
-    "redis": "~2.6.0-2"
+    "redis": "~2.6.0-2",
+    "md5": "~2.1.0"
   }
 }
