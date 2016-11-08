@@ -31,11 +31,20 @@ var util = function(CONFIG) {
             })
         })
     }
+    this.getProxyServer = function(req) {
+        var username = 'lum-customer-yeahmobi-zone-gen';
+        var password = 'acb152f9c5f2';
+        var port = 22225;
+        var session_id = (1000000 * Math.random())|0;
+        var proxyServer = 'http://'+username+'-session-'+session_id+':'+password+'@zproxy.luminati.io:'+port;
 
+        return proxyServer
+    }
     this.getFinalSpiderHtml = function(req, res, client) {
         var url = req.query.url || "";
         var ua = req.query.ua || "";
-        var proxy_server = "http://" + req.query.proxy_ip + ":" + req.query.proxy_port;
+        var proxy_server = that.getProxyServer(req);
+       // var proxy_server = "http://" + req.query.proxy_ip + ":" + req.query.proxy_port;
         var childArgs;
         if (req.query.proxy_ip && req.query.proxy_port) {
             childArgs = [
@@ -78,15 +87,8 @@ var util = function(CONFIG) {
                 headers: headers
             }
 
-            if (req.query.proxy_ip && req.query.proxy_port) {
-                request_option.agentClass = require('socks5-http-client/lib/Agent');
-                request_option.agentOptions = {
-                    socksHost: req.query.proxy_ip, // Defaults to 'localhost'.
-                    socksPort: req.query.proxy_port // Defaults to 1080.
-                }
-
-
-            }
+//            if (req.query.proxy_ip && req.query.proxy_port) {
+            request_option.proxy = that.getProxyServer(req)
             var redirects_urls_arr = redirects_urls.split("_url_");
 
             _.each(redirects_urls_arr, function(v, k) {
