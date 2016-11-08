@@ -36,7 +36,8 @@ var util = function(CONFIG) {
         var password = 'acb152f9c5f2';
         var port = 22225;
         var session_id = (1000000 * Math.random())|0;
-        var proxyServer = 'http://'+username+'-session-'+session_id+':'+password+'@zproxy.luminati.io:'+port;
+        var country = req.query.country ? "country-"+req.query.country +"-": "";
+        var proxyServer = 'http://'+username+'-'+country+'session-'+session_id+':'+password+'@zproxy.luminati.io:'+port;
 
         return proxyServer
     }
