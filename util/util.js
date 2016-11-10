@@ -53,6 +53,8 @@ var util = function(CONFIG) {
                 url,
                 ua,
                 '--proxy=' + proxy_server,
+                '--proxy-type=' + (req.query.proxy_type || "http"),
+                '--load-images=false',
                 0
             ]
         } else {
@@ -60,6 +62,7 @@ var util = function(CONFIG) {
                 path.join(__dirname, '../phantomjs-script.js'),
                 url,
                 ua,
+                '--load-images=false',
                 0
             ]
         }
