@@ -47,25 +47,16 @@ var util = function(CONFIG) {
         var proxy_server = that.getProxyServer(req);
        // var proxy_server = "http://" + req.query.proxy_ip + ":" + req.query.proxy_port;
         var childArgs;
-        if (req.query.proxy_ip && req.query.proxy_port) {
-            childArgs = [
-                path.join(__dirname, '../phantomjs-script.js'),
-                url,
-                ua,
-                '--proxy=' + proxy_server,
-                '--proxy-type=' + (req.query.proxy_type || "http"),
-                '--load-images=false',
-                0
-            ]
-        } else {
-            childArgs = [
-                path.join(__dirname, '../phantomjs-script.js'),
-                url,
-                ua,
-                '--load-images=false',
-                0
-            ]
-        }
+        childArgs = [
+            path.join(__dirname, '../phantomjs-script.js'),
+            url,
+            ua,
+            '--proxy=' + proxy_server,
+            '--proxy-type=' + (req.query.proxy_type || "http"),
+            '--load-images=false',
+            0
+        ]
+
         client.del("redirects_url_" + md5(req.query.url), function(err, replies) {
             if (err) {
                 logger.error("redis srem failed:" + req.query.url)

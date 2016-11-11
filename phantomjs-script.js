@@ -14,7 +14,11 @@ function checkRedirects(myurl) {
 
     // pretend to be a different browser, helps with some shitty browser-detection scripts
     page.settings.userAgent = ua;
-    page.onResourceReceived = function(resource) {
+    page.onResourceReceived = function(resource, request) {
+        if ((/http:\/\/.+?\.css$/gi).test(resource['url'])) {
+            request.abort();
+        }
+
         if (url == resource.url && resource.redirectURL) {
             redirectURL = resource.redirectURL;
         }
